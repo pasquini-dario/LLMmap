@@ -1,0 +1,4 @@
+[
+    ["google/gemini-2.5-flash", 3],
+    ["anthropic/claude-sonnet-4", 3]
+]

@@ -144,8 +144,28 @@ class LLM_OpenAI:
         )
         output = response.choices[0].message.content
         return [output]
+    
 ##################################################################################################################### 
 
+class LLM_OpenRouter(LLM_OpenAI):
+    """OpenRouter LLM loader using OpenAI-compatible API"""
+    
+    def __init__(self, llm_name):
+        api_key = os.getenv('OPENROUTER_API_KEY', None)
+        if api_key is None:
+            raise Exception('Missing OpenRouter API key. Ensure the key is in your .env and try again.')
+        
+        # custom base_url
+        self.client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=api_key,
+        )
+        self.llm_name = llm_name
+        self.is_hf = False
+
+
+
+##################################################################################################################### 
 
 class LLM_Anthropic(LLM_OpenAI):
     def __init__(self, llm_name):
@@ -183,25 +203,6 @@ class LLM_Anthropic(LLM_OpenAI):
         out = message.content[0].text
         
         return [out]
-
-##################################################################################################################### 
-
-class LLM_OpenRouter(LLM_OpenAI):
-    """OpenRouter LLM loader using OpenAI-compatible API"""
-    
-    def __init__(self, llm_name):
-        api_key = os.getenv('OPENROUTER_API_KEY', None)
-        if api_key is None:
-            raise Exception('Missing OpenRouter API key. Ensure the key is in your .env and try again.')
-        
-        # custom base_url
-        self.client = OpenAI(
-            api_key=api_key,
-            base_url="https://openrouter.ai/api/v1"
-        )
-        self.llm_name = llm_name
-        self.is_hf = False
-
 
 ###############################################################################
 
