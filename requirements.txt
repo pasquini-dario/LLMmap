@@ -3,8 +3,8 @@ numpy==2.3.1
 openai==1.97.1
 prompt_toolkit==3.0.51
 pytorch_lightning==2.5.2
-scipy==1.16.0
-torch==2.7.1
+scipy>=1.16.0
+torch>=2.7.1
 torchmetrics==1.7.4
 tqdm==4.67.1
 transformers==4.51.3
