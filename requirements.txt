@@ -1,4 +1,6 @@
 anthropic==0.59.0
+google-auth==2.49.2
+google-genai==1.73.1
 numpy==2.3.1
 openai==1.97.1
 prompt_toolkit==3.0.51
