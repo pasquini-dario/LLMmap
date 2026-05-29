@@ -5,6 +5,8 @@ import transformers
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from openai import OpenAI
 from anthropic import Anthropic
+from google import genai
+from google.genai import types
 
 max_new_tokens = 100
 CACHE_DIR = os.environ.get('HF_MODEL_CACHE', None)
@@ -182,6 +184,47 @@ class LLM_Anthropic(LLM_OpenAI):
 
 ##################################################################################################################### 
 
+class LLM_Gemini(LLM_OpenAI):
+    def __init__(self, llm_name):
+        # Gemini often uses GEMINI_API_KEY or GOOGLE_API_KEY
+        api_key = os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')
+        if api_key is None:
+            raise Exception(f'Missing Gemini API key. Export "GEMINI_API_KEY" in the environment.')
+        
+        self.client = genai.Client(api_key=api_key)
+        self.llm_name = llm_name
+        self.is_hf = False
+
+    def make_prompt(self, system, user):
+        # Gemini SDK uses 'system_instruction' for the system prompt 
+        # and a list of contents for the user message.
+        messages = [types.Content(role="user", parts=[types.Part.from_text(text=user)])]
+        return (system, messages)
+
+    def generate(self, prompt, gen_kargs, max_new_tokens=max_new_tokens):
+        system, messages = prompt
+        
+        # Adjusting gen_kargs to Gemini's expected format (GenerateConfig)
+        # Gemini uses 'max_output_tokens' instead of 'max_tokens'
+        config = {
+            "max_output_tokens": max_new_tokens,
+            "temperature": gen_kargs.get("temperature", 0.7 if gen_kargs.get("do_sample") else 0.0)
+        }
+        
+        # If system instruction is provided, it goes into the config or Client call
+        response = self.client.models.generate_content(
+            model=self.llm_name,
+            contents=messages,
+            config=types.GenerateContentConfig(
+                system_instruction=system,
+                **config
+            )
+        )
+        
+        return [response.text]
+
+#####################################################################################################################
+
 
 def load_llm(llm_name, llm_type, cache_dir=CACHE_DIR, **kargs):
 
@@ -192,6 +235,8 @@ def load_llm(llm_name, llm_type, cache_dir=CACHE_DIR, **kargs):
         llm = LLM_OpenAI(llm_name)
     elif llm_type == 2:
         llm = LLM_Anthropic(llm_name)
+    elif llm_type == 3:
+        llm = LLM_Gemini(llm_name)
     else:
         raise Exception()
     return llm
